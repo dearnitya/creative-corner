@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nitya's Creative Corner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;1,500&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  :root{
+    --blush:#FFEFF8;
+    --mauve:#90828A;
+    --mauve-deep:#6B5D63;
+    --mauve-light:#A79BA1;
+    --cream:#FFF7FB;
+    --gold:#D8B989;
+    --ink:#4A3B42;
+    --ink-soft:#8B7B84;
+    --shadow:0 6px 18px rgba(107,93,99,0.12);
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; min-height:100vh; background:var(--blush);
+    font-family:'DM Sans', sans-serif; color:var(--ink);
+    padding:28px 3vw 60px;
+  }
+  h1,h2{ font-family:'Fraunces', serif; margin:0; }
+
+  /* ---- top bar: search + settings ---- */
+  .topbar{ display:flex; align-items:center; gap:14px; max-width:1400px; margin:0 auto 26px; }
+  .brand{ font-family:'Fraunces', serif; font-style:italic; font-size:19px; color:var(--mauve-deep); margin-right:auto; white-space:nowrap; }
+  form#search{
+    flex:1; max-width:480px; display:flex; align-items:center; gap:8px;
+    background:var(--cream); border-radius:999px; padding:10px 18px; box-shadow:var(--shadow);
+  }
+  form#search input{ flex:1; border:none; outline:none; background:transparent; font-family:'DM Sans'; font-size:14px; color:var(--ink); }
+  form#search button{ border:none; background:var(--mauve); color:var(--cream); width:30px; height:30px; border-radius:50%; cursor:pointer; }
+
+  .gear{
+    width:38px; height:38px; border-radius:50%; background:var(--cream); border:none;
+    box-shadow:var(--shadow); cursor:pointer; font-size:15px; color:var(--mauve-deep);
+    display:flex; align-items:center; justify-content:center; flex:none;
+  }
+
+  /* ---- settings panel ---- */
+  #settings{
+    display:none; max-width:1400px; margin:-10px auto 26px; background:var(--cream);
+    border-radius:18px; padding:18px 22px; box-shadow:var(--shadow); font-size:13px;
+  }
+  #settings.open{ display:block; }
+  #settings h3{ font-family:'Fraunces'; font-size:16px; margin:0 0 10px; }
+  #settings .row{ display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap; align-items:center; }
+  #settings input{
+    flex:1; min-width:220px; border:1.5px solid rgba(107,93,99,0.2); border-radius:10px;
+    padding:8px 12px; font-family:'DM Sans'; font-size:13px; outline:none; background:var(--blush); color:var(--ink);
+  }
+  #settings input:focus{ border-color:var(--mauve); }
+  #settings button.save{ border:none; background:var(--mauve); color:var(--cream); padding:8px 16px; border-radius:10px; font-weight:600; cursor:pointer; }
+  #settings .hint{ color:var(--ink-soft); font-size:12px; line-height:1.5; margin:2px 0 4px; }
+  #settings .status{ font-size:12px; font-weight:600; }
+  #settings .status.ok{ color:#5C8A6E; }
+  #settings .status.off{ color:var(--ink-soft); }
+  #google-connect-btn{ border:none; background:var(--mauve-deep); color:var(--cream); padding:8px 16px; border-radius:10px; font-weight:600; cursor:pointer; }
+
+  /* ---- grid layout ---- */
+  .board{
+    max-width:1400px; margin:0 auto;
+    display:grid;
+    grid-template-columns: 1fr 1.1fr 1.15fr 1.15fr 0.9fr;
+    grid-template-rows: auto 1fr;
+    gap:16px;
+    align-items:stretch;
+  }
+  .colstack{ display:flex; flex-direction:column; gap:16px; grid-row:1/3; }
+  .col1{ grid-column:1; }
+  .col2{ grid-column:2; }
+  .col5{ grid-column:5; }
+
+  .growcard{ flex:1; display:flex; flex-direction:column; min-height:220px; }
+
+  .reading-block{ grid-column:3; grid-row:1; }
+  .gmail-block{ grid-column:4; grid-row:1; display:flex; flex-direction:column; gap:10px; }
+  .icons-zone{ grid-column:3/5; grid-row:2; }
+
+  @media (max-width:1100px){
+    .board{ grid-template-columns:1fr 1fr; grid-template-rows:auto; }
+    .col1,.col2,.col5,.reading-block,.gmail-block,.icons-zone{ grid-column:auto; grid-row:auto; }
+  }
+
+  /* ---- card / widget shell ---- */
+  .card{
+    background:var(--mauve); color:var(--cream); border-radius:20px;
+    box-shadow:var(--shadow); padding:16px 16px 14px; position:relative;
+  }
+  .card.light{ background:var(--cream); color:var(--ink); }
+
+  .sprockets{ position:absolute; top:8px; left:0; right:0; display:flex; justify-content:space-evenly; pointer-events:none; }
+  .sprockets span{ width:5px; height:5px; border-radius:50%; background:rgba(255,247,251,0.5); }
+  .card.light .sprockets span{ background:rgba(107,93,99,0.18); }
+
+  .card h2{ font-size:15px; font-weight:600; margin:6px 0 10px; letter-spacing:0.02em; }
+  .card .label-pill{
+    display:inline-block; background:var(--mauve-deep); color:var(--cream); font-size:11px;
+    font-weight:600; padding:4px 10px; border-radius:999px; margin-bottom:8px; letter-spacing:0.04em; text-transform:uppercase;
+  }
+
+  /* ---- weather + time ---- */
+  #clock{ font-family:'Fraunces'; font-style:italic; font-size:34px; line-height:1; }
+  #clock-date{ font-size:11.5px; opacity:0.85; margin-top:4px; }
+  .weather-row{ display:flex; align-items:center; gap:10px; margin-top:6px; }
+  .weather-row .emoji{ font-size:28px; }
+  .weather-temp{ font-family:'Fraunces'; font-size:26px; }
+  .weather-place{ font-size:11.5px; opacity:0.85; }
+  #weather-city-input{
+    width:100%; margin-top:8px; border:none; border-radius:8px; padding:7px 10px;
+    font-size:12.5px; font-family:'DM Sans'; outline:none; background:rgba(255,247,251,0.25); color:var(--cream);
+  }
+  #weather-city-input::placeholder{ color:rgba(255,247,251,0.75); }
+
+  /* ---- spotify ---- */
+  .spotify-setup{ display:flex; gap:6px; margin-bottom:8px; }
+  .spotify-setup input{
+    flex:1; border:none; border-radius:8px; padding:7px 10px; font-size:12px;
+    background:rgba(255,247,251,0.25); color:var(--cream); outline:none;
+  }
+  .spotify-setup input::placeholder{ color:rgba(255,247,251,0.75); }
+  .spotify-setup button{ border:none; background:var(--gold); color:var(--mauve-deep); font-weight:700; border-radius:8px; padding:0 12px; cursor:pointer; font-size:12px; }
+  #spotify-embed iframe{ width:100%; border:none; border-radius:12px; }
+  #spotify-empty{ font-size:12px; opacity:0.85; line-height:1.5; }
+
+  /* ---- tasks / calendar lists ---- */
+  .agenda-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; overflow-y:auto; }
+  .agenda-list li{
+    background:rgba(255,247,251,0.16); border-radius:10px; padding:9px 11px; font-size:12.5px;
+    display:flex; gap:8px; align-items:flex-start;
+  }
+  .agenda-list li .dot{ width:7px; height:7px; border-radius:50%; background:var(--gold); margin-top:4px; flex:none; }
+  .agenda-list li.done{ opacity:0.55; text-decoration:line-through; }
+  .agenda-empty{ font-size:12px; opacity:0.8; line-height:1.5; }
+  .connect-msg{ font-size:12px; opacity:0.9; line-height:1.6; }
+  .connect-msg button{ margin-top:8px; border:none; background:var(--gold); color:var(--mauve-deep); font-weight:700; padding:7px 14px; border-radius:9px; cursor:pointer; font-size:12px; }
+
+  /* ---- aesthetic image ---- */
+  .img-setup{ display:flex; gap:6px; margin-bottom:8px; }
+  .img-setup input{ flex:1; border:none; border-radius:8px; padding:7px 10px; font-size:12px; background:rgba(107,93,99,0.12); color:var(--ink); outline:none; }
+  .img-setup button{ border:none; background:var(--mauve); color:var(--cream); border-radius:8px; padding:0 12px; font-size:12px; font-weight:600; cursor:pointer; }
+  .aesthetic-img{ width:100%; flex:1; min-height:120px; border-radius:14px; object-fit:cover; background:rgba(107,93,99,0.12); display:block; }
+  .aesthetic-placeholder{
+    flex:1; min-height:120px; border-radius:14px; display:flex; align-items:center; justify-content:center;
+    color:var(--ink-soft); font-size:12px; font-style:italic; background:repeating-linear-gradient(135deg, rgba(107,93,99,0.06) 0 10px, rgba(107,93,99,0.1) 10px 20px);
+    text-align:center; padding:14px;
+  }
+
+  /* ---- reading / watching ---- */
+  .rw-row{ margin-bottom:10px; }
+  .rw-row label{ font-size:10.5px; text-transform:uppercase; letter-spacing:0.06em; opacity:0.8; display:block; margin-bottom:3px; }
+  .rw-row input{
+    width:100%; border:none; border-radius:9px; padding:8px 10px; font-family:'Fraunces'; font-style:italic;
+    font-size:14.5px; background:rgba(255,247,251,0.22); color:var(--cream); outline:none;
+  }
+  .rw-row input::placeholder{ color:rgba(255,247,251,0.7); font-family:'DM Sans'; font-style:normal; font-size:12.5px; }
+
+  /* ---- icons zone ---- */
+  .icons-zone{ display:flex; flex-wrap:wrap; align-content:flex-start; gap:14px; padding-top:4px; }
+  .icon-tile{
+    width:84px; background:var(--mauve); border-radius:16px; padding:12px 6px 9px; text-align:center;
+    text-decoration:none; color:var(--cream); box-shadow:var(--shadow); position:relative;
+    transition:transform .15s ease;
+  }
+  .icon-tile:hover{ transform:translateY(-3px); }
+  .icon-tile img{ width:26px; height:26px; border-radius:8px; background:#fff; padding:4px; margin-bottom:6px; }
+  .icon-tile .nm{ font-size:11px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .icon-tile .del{
+    position:absolute; top:3px; right:5px; width:15px; height:15px; border-radius:50%;
+    background:rgba(255,247,251,0.3); font-size:9px; line-height:15px; opacity:0; transition:opacity .15s ease; cursor:pointer;
+  }
+  .icon-tile:hover .del{ opacity:1; }
+  .icon-tile.add{
+    background:transparent; border:2px dashed var(--mauve); color:var(--mauve-deep);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; box-shadow:none;
+  }
+  .icon-tile.add:hover{ background:var(--cream); }
+  .icon-tile.add .plus{ font-size:22px; line-height:1; margin-bottom:3px; color:var(--gold); }
+
+  /* ---- gmail block ---- */
+  .gmail-shortcut{
+    display:block; text-decoration:none; background:var(--mauve-deep); color:var(--cream);
+    border-radius:16px; padding:12px 14px; font-family:'Fraunces'; font-style:italic; font-size:17px;
+    box-shadow:var(--shadow);
+  }
+  .gmail-img{ flex:1; }
+
+  /* ---- google apps waffle ---- */
+  .waffle-wrap{ position:relative; }
+  .waffle-btn{
+    width:100%; background:var(--mauve-deep); color:var(--cream); border:none; border-radius:16px;
+    padding:12px 14px; font-family:'Fraunces'; font-style:italic; font-size:17px; cursor:pointer;
+    box-shadow:var(--shadow); display:flex; align-items:center; justify-content:space-between;
+  }
+  .waffle-dots{ display:grid; grid-template-columns:repeat(3,4px); gap:3px; }
+  .waffle-dots span{ width:4px; height:4px; border-radius:50%; background:var(--cream); }
+  .waffle-panel{
+    display:none; position:absolute; top:calc(100% + 8px); left:0; right:0; background:var(--cream);
+    border-radius:16px; box-shadow:var(--shadow); padding:14px; z-index:20;
+    grid-template-columns:repeat(3,1fr); gap:10px;
+  }
+  .waffle-panel.open{ display:grid; }
+  .waffle-panel a{
+    display:flex; flex-direction:column; align-items:center; gap:5px; text-decoration:none; color:var(--ink);
+    font-size:10.5px; font-weight:500; padding:6px 2px; border-radius:10px;
+  }
+  .waffle-panel a:hover{ background:var(--blush); }
+  .waffle-panel img{ width:22px; height:22px; }
+
+  /* ---- notes ---- */
+  #notes-list{ list-style:none; margin:0 0 8px; padding:0; display:flex; flex-direction:column; gap:7px; overflow-y:auto; }
+  #notes-list li{
+    background:rgba(255,247,251,0.16); border-radius:9px; padding:8px 10px; font-size:12.5px;
+    display:flex; justify-content:space-between; gap:8px; align-items:flex-start;
+  }
+  #notes-list li .rm{ opacity:0.6; cursor:pointer; font-size:11px; flex:none; }
+  #notes-list li .rm:hover{ opacity:1; }
+  #notes-form{ display:flex; gap:6px; margin-top:auto; }
+  #notes-input{
+    flex:1; border:none; border-radius:9px; padding:8px 10px; font-size:12.5px; font-family:'DM Sans';
+    background:rgba(255,247,251,0.22); color:var(--cream); outline:none;
+  }
+  #notes-input::placeholder{ color:rgba(255,247,251,0.7); }
+  #notes-form button{ border:none; background:var(--gold); color:var(--mauve-deep); font-weight:700; border-radius:9px; padding:0 12px; cursor:pointer; font-size:12px; }
+
+  ::-webkit-scrollbar{ width:6px; }
+  ::-webkit-scrollbar-thumb{ background:rgba(107,93,99,0.3); border-radius:10px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">Nitya's Creative Corner ⋆</div>
+  <form id="search" action="https://www.google.com/search" method="get">
+    <span style="opacity:0.6;">⌕</span>
+    <input type="text" name="q" placeholder="search…" autocomplete="off">
+    <button type="submit">→</button>
+  </form>
+  <button class="gear" id="gear-btn" title="settings">⚙</button>
+</div>
+
+<div id="settings">
+  <h3>connections & settings</h3>
+  <div class="row">
+    <input id="client-id-input" type="text" placeholder="Google OAuth Client ID (from Google Cloud Console)">
+    <button class="save" id="client-id-save">save</button>
+    <span class="status off" id="client-id-status">not set</span>
+  </div>
+  <div class="hint">This powers the real Google Tasks + Calendar widgets. You'll need to create a free Google Cloud project and paste your Client ID here — ask for the step-by-step if you haven't done this part yet.</div>
+  <div class="row">
+    <button id="google-connect-btn">connect google account</button>
+    <span class="status off" id="google-connect-status">not connected</span>
+  </div>
+</div>
+
+<div class="board">
+
+  <!-- COLUMN 1 -->
+  <div class="colstack col1">
+    <div class="card">
+      <div class="sprockets"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+      <div class="label-pill">weather</div>
+      <div id="clock">--:--</div>
+      <div id="clock-date"></div>
+      <div class="weather-row" id="weather-row" style="display:none;">
+        <span class="emoji" id="weather-emoji">☁</span>
+        <div>
+          <div class="weather-temp" id="weather-temp">--°</div>
+          <div class="weather-place" id="weather-place"></div>
+        </div>
+      </div>
+      <input id="weather-city-input" type="text" placeholder="type your city, press enter…">
+    </div>
+
+    <div class="card">
+      <div class="sprockets"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+      <div class="label-pill">spotify</div>
+      <div class="spotify-setup">
+        <input id="spotify-input" type="text" placeholder="paste playlist / album link…">
+        <button id="spotify-save">set</button>
+      </div>
+      <div id="spotify-embed"></div>
+      <div id="spotify-empty">Paste a public Spotify playlist, album, or artist link above to embed it here.</div>
+    </div>
+
+    <div class="card growcard" id="todo-card">
+      <div class="sprockets"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+      <div class="label-pill">google tasks</div>
+      <div id="todo-body" style="flex:1; display:flex; flex-direction:column;">
+        <div class="connect-msg">Connect your Google account (⚙ top right) to see your real task list here.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COLUMN 2 -->
+  <div class="colstack col2">
+    <div class="card light growcard" style="min-height:180px;">
+      <div class="sprockets"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+      <div class="label-pill" style="background:var(--mauve);">moodboard</div>
+      <div class="img-setup">
+        <input id="img1-input" type="text" placeholder="paste image URL…">
+        <button id="img1-save">set</button>
+      </div>
+      <div id="img1-wrap"><div class="aesthetic-placeholder">paste an image link above — a still, a cover, a mood, whatever you're into right now</div></div>
+    </div>
+
+    <div class="card light">
+      <form id="search2" action="https://www.google.com/search" method="get" style="display:flex; gap:8px; align-items:center;">
+        <span style="opacity:0.6;">⌕</span>
+        <input type="text" name="q" placeholder="search the web…" style="flex:1; border:none; outline:none; background:transparent; font-family:'DM Sans'; font-size:13.5px; color:var(--ink);" autocomplete="off">
+      </form>
+    </div>
+
+    <div class="card growcard" id="calendar-card">
+      <div class="sprockets"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+      <div class="label-pill">calendar & deadlines</div>
+      <div id="cal-body" style="flex:1; display:flex; flex-direction:column;">
+        <div class="connect-msg">Connect your Google account to see upcoming events and task deadlines together here.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COLUMN 3: reading/watching -->
+  <div class="card reading-block">
+    <div class="sprockets"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+    <div class="label-pill">currently</div>
+    <div class="rw-row">
+      <label>reading</label>
+      <input id="reading-input" type="text" placeholder="book title…">
+    </div>
+    <div class="rw-row" style="margin-bottom:0;">
+      <label>watching</label>
+      <input id="watching-input" type="text" placeholder="show / film…">
+    </div>
+  </div>
+
+  <!-- COLUMN 4: gmail -->
+  <div class="gmail-block">
+    <a class="gmail-shortcut" href="https://mail.google.com" target="_self">gmail →</a>
+    <div class="card light gmail-img" style="min-height:150px;">
+      <div class="img-setup">
+        <input id="img2-input" type="text" placeholder="paste image URL…">
+        <button id="img2-save">set</button>
+      </div>
+      <div id="img2-wrap"><div class="aesthetic-placeholder">another little image, just for the aesthetic</div></div>
+    </div>
+  </div>
+
+  <!-- ICONS ZONE (spans col 3+4) -->
+  <div class="icons-zone" id="icons-zone"></div>
+
+  <!-- COLUMN 5 -->
+  <div class="colstack col5">
+    <div class="waffle-wrap">
+      <button class="waffle-btn" id="waffle-btn">google apps <span class="waffle-dots"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></button>
+      <div class="waffle-panel" id="waffle-panel"></div>
+    </div>
+
+    <div class="card growcard">
+      <div class="sprockets"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+      <div class="label-pill">quick notes</div>
+      <ul id="notes-list"></ul>
+      <form id="notes-form">
+        <input id="notes-input" type="text" placeholder="jot something down…" autocomplete="off">
+        <button type="submit">+</button>
+      </form>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ================= CLOCK ================= */
+function tick(){
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2,'0'), m = String(now.getMinutes()).padStart(2,'0');
+  document.getElementById('clock').textContent = `${h}:${m}`;
+  document.getElementById('clock-date').textContent = now.toLocaleDateString(undefined,{weekday:'long', month:'short', day:'numeric'});
+}
+tick(); setInterval(tick, 10000);
+
+/* ================= SETTINGS PANEL ================= */
+document.getElementById('gear-btn').addEventListener('click', ()=>{
+  document.getElementById('settings').classList.toggle('open');
+});
+const clientIdInput = document.getElementById('client-id-input');
+const clientIdStatus = document.getElementById('client-id-status');
+function refreshClientIdStatus(){
+  const id = localStorage.getItem('ph_client_id');
+  if(id){ clientIdInput.value = id; clientIdStatus.textContent='saved'; clientIdStatus.className='status ok'; }
+}
+refreshClientIdStatus();
+document.getElementById('client-id-save').addEventListener('click', ()=>{
+  const v = clientIdInput.value.trim();
+  if(!v) return;
+  localStorage.setItem('ph_client_id', v);
+  refreshClientIdStatus();
+  initGoogle();
+});
+
+/* ================= WEATHER (Open-Meteo, no key needed) ================= */
+const weatherEmoji = code => {
+  if(code===0) return '☀';
+  if([1,2,3].includes(code)) return '⛅';
+  if([45,48].includes(code)) return '🌫';
+  if([51,53,55,56,57,61,63,65,66,67,80,81,82].includes(code)) return '🌧';
+  if([71,73,75,77,85,86].includes(code)) return '❄';
+  if([95,96,99].includes(code)) return '⛈';
+  return '☁';
+};
+async function loadWeather(lat, lon, place){
+  try{
+    const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&temperature_unit=celsius`);
+    const d = await r.json();
+    document.getElementById('weather-emoji').textContent = weatherEmoji(d.current.weather_code);
+    document.getElementById('weather-temp').textContent = Math.round(d.current.temperature_2m) + '°C';
+    document.getElementById('weather-place').textContent = place;
+    document.getElementById('weather-row').style.display = 'flex';
+  }catch(e){ console.warn('weather failed', e); }
+}
+async function geocodeCity(city){
+  const r = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1`);
+  const d = await r.json();
+  if(d.results && d.results.length){
+    const res = d.results[0];
+    localStorage.setItem('ph_city', JSON.stringify({name:res.name, lat:res.latitude, lon:res.longitude}));
+    loadWeather(res.latitude, res.longitude, res.name);
+  }
+}
+document.getElementById('weather-city-input').addEventListener('keydown', e=>{
+  if(e.key==='Enter' && e.target.value.trim()){ geocodeCity(e.target.value.trim()); }
+});
+(function initWeather(){
+  const saved = localStorage.getItem('ph_city');
+  if(saved){ const c = JSON.parse(saved); loadWeather(c.lat, c.lon, c.name); return; }
+  if(navigator.geolocation){
+    navigator.geolocation.getCurrentPosition(
+      pos => loadWeather(pos.coords.latitude, pos.coords.longitude, 'your location'),
+      () => {} // silently fall back to the manual input
+    );
+  }
+})();
+
+/* ================= SPOTIFY ================= */
+function spotifyEmbedSrc(url){
+  try{
+    const u = new URL(url);
+    const parts = u.pathname.split('/').filter(Boolean); // [type, id]
+    if(parts.length<2) return null;
+    return `https://open.spotify.com/embed/${parts[0]}/${parts[1]}`;
+  }catch(e){ return null; }
+}
+function renderSpotify(){
+  const src = localStorage.getItem('ph_spotify');
+  const embed = document.getElementById('spotify-embed');
+  const empty = document.getElementById('spotify-empty');
+  if(src){
+    embed.innerHTML = `<iframe src="${src}" height="152" allow="encrypted-media"></iframe>`;
+    empty.style.display='none';
+  } else { embed.innerHTML=''; empty.style.display='block'; }
+}
+document.getElementById('spotify-save').addEventListener('click', ()=>{
+  const val = document.getElementById('spotify-input').value.trim();
+  if(!val) return;
+  const src = spotifyEmbedSrc(val);
+  if(src){ localStorage.setItem('ph_spotify', src); renderSpotify(); }
+  else alert("Couldn't read that link — paste a normal open.spotify.com playlist/album/artist URL.");
+});
+renderSpotify();
+
+/* ================= IMAGE WIDGETS ================= */
+function wireImage(inputId, saveId, wrapId, storeKey, fallbackHtml){
+  const wrap = document.getElementById(wrapId);
+  function render(){
+    const url = localStorage.getItem(storeKey);
+    wrap.innerHTML = url ? `<img class="aesthetic-img" src="${url}" alt="">` : fallbackHtml;
+  }
+  document.getElementById(saveId).addEventListener('click', ()=>{
+    const v = document.getElementById(inputId).value.trim();
+    if(!v) return;
+    localStorage.setItem(storeKey, v);
+    render();
+  });
+  render();
+}
+wireImage('img1-input','img1-save','img1-wrap','ph_img1', document.getElementById('img1-wrap').innerHTML);
+wireImage('img2-input','img2-save','img2-wrap','ph_img2', document.getElementById('img2-wrap').innerHTML);
+
+/* ================= READING / WATCHING ================= */
+['reading','watching'].forEach(key=>{
+  const el = document.getElementById(key+'-input');
+  el.value = localStorage.getItem('ph_'+key) || '';
+  el.addEventListener('input', ()=> localStorage.setItem('ph_'+key, el.value));
+});
+
+/* ================= ICON SHORTCUTS ================= */
+function loadShortcuts(){ return JSON.parse(localStorage.getItem('ph_shortcuts')||'[]'); }
+function saveShortcuts(l){ localStorage.setItem('ph_shortcuts', JSON.stringify(l)); }
+function faviconFor(url){ try{ return `https://www.google.com/s2/favicons?domain=${new URL(url).hostname}&sz=64`; }catch(e){ return ''; } }
+function renderShortcuts(){
+  const zone = document.getElementById('icons-zone');
+  zone.innerHTML='';
+  loadShortcuts().forEach((s,i)=>{
+    const a = document.createElement('a');
+    a.href=s.url; a.target='_self'; a.className='icon-tile';
+    a.innerHTML = `<span class="del" data-i="${i}">✕</span><img src="${faviconFor(s.url)}"><div class="nm">${s.name}</div>`;
+    zone.appendChild(a);
+  });
+  const add = document.createElement('div');
+  add.className='icon-tile add';
+  add.innerHTML = `<div class="plus">+</div><div class="nm">add</div>`;
+  add.addEventListener('click', ()=>{
+    const name = prompt('Name for this shortcut?');
+    if(!name) return;
+    let url = prompt('URL?');
+    if(!url) return;
+    if(!/^https?:\/\//i.test(url)) url = 'https://'+url;
+    const list = loadShortcuts(); list.push({name,url}); saveShortcuts(list); renderShortcuts();
+  });
+  zone.appendChild(add);
+  zone.querySelectorAll('.del').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      e.preventDefault(); e.stopPropagation();
+      const list = loadShortcuts(); list.splice(+btn.dataset.i,1); saveShortcuts(list); renderShortcuts();
+    });
+  });
+}
+renderShortcuts();
+
+/* ================= GOOGLE APPS WAFFLE ================= */
+const googleApps = [
+  {name:'Drive', url:'https://drive.google.com', icon:'https://www.google.com/s2/favicons?domain=drive.google.com&sz=64'},
+  {name:'Docs', url:'https://docs.google.com', icon:'https://www.google.com/s2/favicons?domain=docs.google.com&sz=64'},
+  {name:'Sheets', url:'https://sheets.google.com', icon:'https://www.google.com/s2/favicons?domain=sheets.google.com&sz=64'},
+  {name:'Slides', url:'https://slides.google.com', icon:'https://www.google.com/s2/favicons?domain=slides.google.com&sz=64'},
+  {name:'Photos', url:'https://photos.google.com', icon:'https://www.google.com/s2/favicons?domain=photos.google.com&sz=64'},
+  {name:'Keep', url:'https://keep.google.com', icon:'https://www.google.com/s2/favicons?domain=keep.google.com&sz=64'},
+  {name:'Maps', url:'https://maps.google.com', icon:'https://www.google.com/s2/favicons?domain=maps.google.com&sz=64'},
+  {name:'YouTube', url:'https://youtube.com', icon:'https://www.google.com/s2/favicons?domain=youtube.com&sz=64'},
+  {name:'Meet', url:'https://meet.google.com', icon:'https://www.google.com/s2/favicons?domain=meet.google.com&sz=64'},
+];
+const wafflePanel = document.getElementById('waffle-panel');
+wafflePanel.innerHTML = googleApps.map(a=>`<a href="${a.url}" target="_self"><img src="${a.icon}">${a.name}</a>`).join('');
+document.getElementById('waffle-btn').addEventListener('click', ()=> wafflePanel.classList.toggle('open'));
+document.addEventListener('click', e=>{
+  if(!e.target.closest('.waffle-wrap')) wafflePanel.classList.remove('open');
+});
+
+/* ================= NOTES ================= */
+function loadNotes(){ return JSON.parse(localStorage.getItem('ph_notes')||'[]'); }
+function saveNotes(n){ localStorage.setItem('ph_notes', JSON.stringify(n)); }
+function renderNotes(){
+  const list = loadNotes();
+  const ul = document.getElementById('notes-list');
+  ul.innerHTML = list.map((n,i)=>`<li><span>${n}</span><span class="rm" data-i="${i}">✕</span></li>`).join('') || `<li style="opacity:0.7;">no notes yet</li>`;
+  ul.querySelectorAll('.rm').forEach(el=> el.addEventListener('click', ()=>{
+    const n = loadNotes(); n.splice(+el.dataset.i,1); saveNotes(n); renderNotes();
+  }));
+}
+document.getElementById('notes-form').addEventListener('submit', e=>{
+  e.preventDefault();
+  const input = document.getElementById('notes-input');
+  if(!input.value.trim()) return;
+  const n = loadNotes(); n.push(input.value.trim()); saveNotes(n); input.value=''; renderNotes();
+});
+renderNotes();
+
+/* ================= GOOGLE OAUTH: TASKS + CALENDAR ================= */
+let googleAccessToken = null;
+let tokenClient = null;
+
+function initGoogle(){
+  const clientId = localStorage.getItem('ph_client_id');
+  if(!clientId || !window.google || !google.accounts) return;
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: clientId,
+    scope: 'https://www.googleapis.com/auth/tasks.readonly https://www.googleapis.com/auth/calendar.readonly',
+    callback: (resp)=>{
+      if(resp.access_token){
+        googleAccessToken = resp.access_token;
+        document.getElementById('google-connect-status').textContent = 'connected';
+        document.getElementById('google-connect-status').className = 'status ok';
+        loadTasks();
+        loadCalendar();
+      }
+    }
+  });
+}
+window.addEventListener('load', ()=> setTimeout(initGoogle, 400));
+
+document.getElementById('google-connect-btn').addEventListener('click', ()=>{
+  if(!localStorage.getItem('ph_client_id')){
+    alert('Add your Google OAuth Client ID above first, then hit save.');
+    return;
+  }
+  if(!tokenClient) initGoogle();
+  if(tokenClient) tokenClient.requestAccessToken();
+});
+
+async function loadTasks(){
+  const body = document.getElementById('todo-body');
+  try{
+    const r = await fetch('https://tasks.googleapis.com/tasks/v1/lists/@default/tasks?showCompleted=true&maxResults=25', {
+      headers:{ Authorization: 'Bearer ' + googleAccessToken }
+    });
+    const d = await r.json();
+    const items = d.items || [];
+    if(!items.length){ body.innerHTML = `<div class="agenda-empty">no tasks — nice and clear ✦</div>`; return; }
+    body.innerHTML = `<ul class="agenda-list">${items.map(t=>`<li class="${t.status==='completed'?'done':''}"><span class="dot"></span><span>${t.title||'(untitled)'}</span></li>`).join('')}</ul>`;
+  }catch(e){ body.innerHTML = `<div class="agenda-empty">couldn't load tasks — try reconnecting from ⚙ settings.</div>`; }
+}
+
+async function loadCalendar(){
+  const body = document.getElementById('cal-body');
+  try{
+    const now = new Date().toISOString();
+    const r = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${now}&maxResults=12&singleEvents=true&orderBy=startTime`, {
+      headers:{ Authorization: 'Bearer ' + googleAccessToken }
+    });
+    const d = await r.json();
+    const items = d.items || [];
+    if(!items.length){ body.innerHTML = `<div class="agenda-empty">nothing coming up ✦</div>`; return; }
+    body.innerHTML = `<ul class="agenda-list">${items.map(ev=>{
+      const start = ev.start.dateTime || ev.start.date;
+      const dt = new Date(start);
+      const label = ev.start.dateTime
+        ? dt.toLocaleString(undefined,{weekday:'short', hour:'numeric', minute:'2-digit'})
+        : dt.toLocaleDateString(undefined,{weekday:'short', month:'short', day:'numeric'});
+      return `<li><span class="dot"></span><span><b>${label}</b><br>${ev.summary||'(no title)'}</span></li>`;
+    }).join('')}</ul>`;
+  }catch(e){ body.innerHTML = `<div class="agenda-empty">couldn't load your calendar — try reconnecting from ⚙ settings.</div>`; }
+}
+</script>
+</body>
+</html>
