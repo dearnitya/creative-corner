@@ -67,7 +67,7 @@
   .board{
     max-width:1400px; margin:0 auto;
     display:grid;
-    grid-template-columns: 1fr 1.1fr 1.15fr 1.15fr 0.9fr;
+    grid-template-columns: 1fr 1.05fr 1.35fr 1.05fr 0.85fr;
     grid-template-rows: auto 1fr;
     gap:16px;
     align-items:stretch;
@@ -140,6 +140,30 @@
   .agenda-empty{ font-size:12px; opacity:0.8; line-height:1.5; }
   .connect-msg{ font-size:12px; opacity:0.9; line-height:1.6; }
   .connect-msg button{ margin-top:8px; border:none; background:var(--gold); color:var(--mauve-deep); font-weight:700; padding:7px 14px; border-radius:9px; cursor:pointer; font-size:12px; }
+  .agenda-list li.task .dot{ background:var(--mauve-light); }
+
+  /* ---- quick-add task ---- */
+  .quick-add-row{ display:flex; gap:6px; margin-bottom:9px; flex:none; }
+  .quick-add-row input{
+    flex:1; border:none; border-radius:9px; padding:8px 10px; font-size:12.5px; font-family:'DM Sans';
+    background:rgba(255,247,251,0.22); color:var(--cream); outline:none;
+  }
+  .quick-add-row input::placeholder{ color:rgba(255,247,251,0.7); }
+  .quick-add-row button{ border:none; background:var(--gold); color:var(--mauve-deep); font-weight:700; border-radius:9px; padding:0 12px; cursor:pointer; font-size:13px; flex:none; }
+
+  /* ---- mini week calendar ---- */
+  .week-strip{ display:flex; gap:4px; flex:none; }
+  .week-day{ flex:1; text-align:center; background:rgba(255,247,251,0.14); border-radius:10px; padding:6px 2px 7px; }
+  .week-day .wd-name{ font-size:9px; text-transform:uppercase; letter-spacing:0.03em; opacity:0.75; }
+  .week-day .wd-num{ font-family:'Fraunces'; font-size:15px; margin-top:2px; line-height:1.1; }
+  .week-day .wd-dot{ width:4px; height:4px; border-radius:50%; background:var(--gold); margin:4px auto 0; }
+  .week-day .wd-dot.hidden{ visibility:hidden; }
+  .week-day.today{ background:var(--gold); }
+  .week-day.today .wd-name, .week-day.today .wd-num{ color:var(--mauve-deep); font-weight:700; }
+  .week-day.today .wd-dot{ background:var(--mauve-deep); }
+  .week-agenda-group{ margin-bottom:10px; }
+  .week-agenda-group:last-child{ margin-bottom:0; }
+  .week-agenda-group .wag-label{ font-size:10.5px; opacity:0.8; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:5px; }
 
   /* ---- aesthetic image ---- */
   .img-setup{ display:flex; gap:6px; margin-bottom:8px; }
@@ -155,11 +179,12 @@
   /* ---- reading / watching ---- */
   .rw-row{ margin-bottom:10px; }
   .rw-row label{ font-size:10.5px; text-transform:uppercase; letter-spacing:0.06em; opacity:0.8; display:block; margin-bottom:3px; }
-  .rw-row input{
+  .rw-row textarea{
     width:100%; border:none; border-radius:9px; padding:8px 10px; font-family:'Fraunces'; font-style:italic;
-    font-size:14.5px; background:rgba(255,247,251,0.22); color:var(--cream); outline:none;
+    font-size:14.5px; line-height:1.35; background:rgba(255,247,251,0.22); color:var(--cream); outline:none;
+    resize:none; overflow:hidden; display:block; min-height:36px;
   }
-  .rw-row input::placeholder{ color:rgba(255,247,251,0.7); font-family:'DM Sans'; font-style:normal; font-size:12.5px; }
+  .rw-row textarea::placeholder{ color:rgba(255,247,251,0.7); font-family:'DM Sans'; font-style:normal; font-size:12.5px; }
 
   /* ---- icons zone ---- */
   .icons-zone{ display:flex; flex-wrap:wrap; align-content:flex-start; gap:14px; padding-top:4px; }
@@ -252,7 +277,7 @@
     <button class="save" id="client-id-save">save</button>
     <span class="status off" id="client-id-status">not set</span>
   </div>
-  <div class="hint">This powers the real Google Tasks + Calendar widgets. You'll need to create a free Google Cloud project and paste your Client ID here — ask for the step-by-step if you haven't done this part yet.</div>
+  <div class="hint">This powers the real Google Tasks + Calendar widgets, including adding tasks right from the dashboard. You'll need to create a free Google Cloud project and paste your Client ID here — ask for the step-by-step if you haven't done this part yet. If you connected before this update, hit "connect google account" again to grant the new add-task permission.</div>
   <div class="row">
     <button id="google-connect-btn">connect google account</button>
     <span class="status off" id="google-connect-status">not connected</span>
@@ -320,8 +345,8 @@
     <div class="card growcard" id="calendar-card">
       <div class="sprockets"><span></span><span></span><span></span><span></span><span></span><span></span></div>
       <div class="label-pill">calendar & deadlines</div>
-      <div id="cal-body" style="flex:1; display:flex; flex-direction:column;">
-        <div class="connect-msg">Connect your Google account to see upcoming events and task deadlines together here.</div>
+      <div id="cal-body" style="flex:1; display:flex; flex-direction:column; gap:8px;">
+        <div class="connect-msg">Connect your Google account to see a mini week view of your events and task deadlines here.</div>
       </div>
     </div>
   </div>
@@ -332,11 +357,11 @@
     <div class="label-pill">currently</div>
     <div class="rw-row">
       <label>reading</label>
-      <input id="reading-input" type="text" placeholder="book title…">
+      <textarea id="reading-input" rows="1" placeholder="book title…"></textarea>
     </div>
     <div class="rw-row" style="margin-bottom:0;">
       <label>watching</label>
-      <input id="watching-input" type="text" placeholder="show / film…">
+      <textarea id="watching-input" rows="1" placeholder="show / film…"></textarea>
     </div>
   </div>
 
@@ -493,10 +518,15 @@ wireImage('img1-input','img1-save','img1-wrap','ph_img1', document.getElementByI
 wireImage('img2-input','img2-save','img2-wrap','ph_img2', document.getElementById('img2-wrap').innerHTML);
 
 /* ================= READING / WATCHING ================= */
+function autoResizeTA(el){ el.style.height='auto'; el.style.height = el.scrollHeight + 'px'; }
 ['reading','watching'].forEach(key=>{
   const el = document.getElementById(key+'-input');
   el.value = localStorage.getItem('ph_'+key) || '';
-  el.addEventListener('input', ()=> localStorage.setItem('ph_'+key, el.value));
+  autoResizeTA(el);
+  el.addEventListener('input', ()=>{ localStorage.setItem('ph_'+key, el.value); autoResizeTA(el); });
+});
+window.addEventListener('load', ()=>{
+  ['reading','watching'].forEach(key=> autoResizeTA(document.getElementById(key+'-input')));
 });
 
 /* ================= ICON SHORTCUTS ================= */
@@ -580,14 +610,14 @@ function initGoogle(){
   if(!clientId || !window.google || !google.accounts) return;
   tokenClient = google.accounts.oauth2.initTokenClient({
     client_id: clientId,
-    scope: 'https://www.googleapis.com/auth/tasks.readonly https://www.googleapis.com/auth/calendar.readonly',
+    scope: 'https://www.googleapis.com/auth/tasks https://www.googleapis.com/auth/calendar.readonly',
     callback: (resp)=>{
       if(resp.access_token){
         googleAccessToken = resp.access_token;
         document.getElementById('google-connect-status').textContent = 'connected';
         document.getElementById('google-connect-status').className = 'status ok';
         loadTasks();
-        loadCalendar();
+        loadCalendarAndDeadlines();
       }
     }
   });
@@ -605,36 +635,131 @@ document.getElementById('google-connect-btn').addEventListener('click', ()=>{
 
 async function loadTasks(){
   const body = document.getElementById('todo-body');
+  body.innerHTML = `
+    <div class="quick-add-row">
+      <input id="new-task-input" type="text" placeholder="add a task…" autocomplete="off">
+      <button id="new-task-add" title="add task">+</button>
+    </div>
+    <div id="todo-list-wrap" style="flex:1; overflow-y:auto;"><div class="agenda-empty">loading…</div></div>
+  `;
+  document.getElementById('new-task-add').addEventListener('click', addTask);
+  document.getElementById('new-task-input').addEventListener('keydown', e=>{
+    if(e.key==='Enter'){ e.preventDefault(); addTask(); }
+  });
+  await refreshTaskList();
+}
+
+async function refreshTaskList(){
+  const listWrap = document.getElementById('todo-list-wrap');
+  if(!listWrap) return;
   try{
     const r = await fetch('https://tasks.googleapis.com/tasks/v1/lists/@default/tasks?showCompleted=true&maxResults=25', {
       headers:{ Authorization: 'Bearer ' + googleAccessToken }
     });
     const d = await r.json();
     const items = d.items || [];
-    if(!items.length){ body.innerHTML = `<div class="agenda-empty">no tasks — nice and clear ✦</div>`; return; }
-    body.innerHTML = `<ul class="agenda-list">${items.map(t=>`<li class="${t.status==='completed'?'done':''}"><span class="dot"></span><span>${t.title||'(untitled)'}</span></li>`).join('')}</ul>`;
-  }catch(e){ body.innerHTML = `<div class="agenda-empty">couldn't load tasks — try reconnecting from ⚙ settings.</div>`; }
+    if(!items.length){ listWrap.innerHTML = `<div class="agenda-empty">no tasks — nice and clear ✦</div>`; return; }
+    listWrap.innerHTML = `<ul class="agenda-list">${items.map(t=>`<li class="${t.status==='completed'?'done':''}"><span class="dot"></span><span>${t.title||'(untitled)'}</span></li>`).join('')}</ul>`;
+  }catch(e){ listWrap.innerHTML = `<div class="agenda-empty">couldn't load tasks — try reconnecting from ⚙ settings.</div>`; }
 }
 
-async function loadCalendar(){
-  const body = document.getElementById('cal-body');
+async function addTask(){
+  const input = document.getElementById('new-task-input');
+  const title = input.value.trim();
+  if(!title || !googleAccessToken) return;
+  input.disabled = true;
   try{
-    const now = new Date().toISOString();
-    const r = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${now}&maxResults=12&singleEvents=true&orderBy=startTime`, {
+    const r = await fetch('https://tasks.googleapis.com/tasks/v1/lists/@default/tasks', {
+      method:'POST',
+      headers:{ Authorization: 'Bearer ' + googleAccessToken, 'Content-Type':'application/json' },
+      body: JSON.stringify({ title })
+    });
+    if(!r.ok) throw new Error('add failed');
+    input.value = '';
+    await refreshTaskList();
+  }catch(e){
+    alert("Couldn't add that task — try reconnecting from ⚙ settings (the add-task permission may need re-granting).");
+  }finally{
+    input.disabled = false;
+    input.focus();
+  }
+}
+
+async function loadCalendarAndDeadlines(){
+  const body = document.getElementById('cal-body');
+  body.innerHTML = `<div class="week-strip" id="week-strip"></div><div id="week-agenda" style="flex:1; overflow-y:auto;"><div class="agenda-empty">loading…</div></div>`;
+  const stripEl = document.getElementById('week-strip');
+  const agendaEl = document.getElementById('week-agenda');
+
+  const today = new Date(); today.setHours(0,0,0,0);
+  const weekEnd = new Date(today); weekEnd.setDate(weekEnd.getDate()+7);
+  const dayKey = dt => dt.toDateString();
+
+  let events = [];
+  try{
+    const r = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${today.toISOString()}&timeMax=${weekEnd.toISOString()}&maxResults=50&singleEvents=true&orderBy=startTime`, {
       headers:{ Authorization: 'Bearer ' + googleAccessToken }
     });
     const d = await r.json();
-    const items = d.items || [];
-    if(!items.length){ body.innerHTML = `<div class="agenda-empty">nothing coming up ✦</div>`; return; }
-    body.innerHTML = `<ul class="agenda-list">${items.map(ev=>{
-      const start = ev.start.dateTime || ev.start.date;
-      const dt = new Date(start);
-      const label = ev.start.dateTime
-        ? dt.toLocaleString(undefined,{weekday:'short', hour:'numeric', minute:'2-digit'})
-        : dt.toLocaleDateString(undefined,{weekday:'short', month:'short', day:'numeric'});
-      return `<li><span class="dot"></span><span><b>${label}</b><br>${ev.summary||'(no title)'}</span></li>`;
-    }).join('')}</ul>`;
-  }catch(e){ body.innerHTML = `<div class="agenda-empty">couldn't load your calendar — try reconnecting from ⚙ settings.</div>`; }
+    events = d.items || [];
+  }catch(e){}
+
+  let deadlineTasks = [];
+  try{
+    const r2 = await fetch('https://tasks.googleapis.com/tasks/v1/lists/@default/tasks?showCompleted=false&maxResults=50', {
+      headers:{ Authorization: 'Bearer ' + googleAccessToken }
+    });
+    const d2 = await r2.json();
+    deadlineTasks = (d2.items || []).filter(t=>t.due);
+  }catch(e){}
+
+  const dayMap = {};
+  function addItem(dt, item){ const k = dayKey(dt); (dayMap[k] = dayMap[k]||[]).push(item); }
+
+  events.forEach(ev=>{
+    const start = ev.start.dateTime || ev.start.date;
+    const dt = new Date(start);
+    if(dt < today || dt >= weekEnd) return;
+    const time = ev.start.dateTime ? dt.toLocaleTimeString(undefined,{hour:'numeric', minute:'2-digit'}) : null;
+    addItem(dt, { type:'event', time, text: ev.summary || '(no title)' });
+  });
+  deadlineTasks.forEach(t=>{
+    const dt = new Date(t.due);
+    if(dt < today || dt >= weekEnd) return;
+    addItem(dt, { type:'task', time:null, text: t.title || '(untitled)' });
+  });
+
+  let stripHtml = '';
+  for(let i=0;i<7;i++){
+    const d = new Date(today); d.setDate(d.getDate()+i);
+    const has = !!dayMap[dayKey(d)];
+    stripHtml += `<div class="week-day ${i===0?'today':''}">
+      <div class="wd-name">${d.toLocaleDateString(undefined,{weekday:'narrow'})}</div>
+      <div class="wd-num">${d.getDate()}</div>
+      <div class="wd-dot ${has?'':'hidden'}"></div>
+    </div>`;
+  }
+  stripEl.innerHTML = stripHtml;
+
+  const keys = Object.keys(dayMap).sort((a,b)=> new Date(a) - new Date(b));
+  if(!keys.length){ agendaEl.innerHTML = `<div class="agenda-empty">nothing coming up this week ✦</div>`; return; }
+
+  const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate()+1);
+  agendaEl.innerHTML = keys.map(k=>{
+    const dt = new Date(k);
+    const label = dayKey(dt)===dayKey(today) ? 'today'
+      : dayKey(dt)===dayKey(tomorrow) ? 'tomorrow'
+      : dt.toLocaleDateString(undefined,{weekday:'long', month:'short', day:'numeric'});
+    const items = dayMap[k];
+    return `<div class="week-agenda-group">
+      <div class="wag-label">${label}</div>
+      <ul class="agenda-list">${items.map(it=>{
+        const marker = it.type==='task' ? '📌 ' : '';
+        const timePart = it.time ? `<b>${it.time}</b><br>` : '';
+        return `<li class="${it.type==='task'?'task':''}"><span class="dot"></span><span>${timePart}${marker}${it.text}</span></li>`;
+      }).join('')}</ul>
+    </div>`;
+  }).join('');
 }
 </script>
 </body>
