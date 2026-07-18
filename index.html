@@ -187,16 +187,29 @@
   .week-agenda-group:last-child{ margin-bottom:0; }
   .week-agenda-group .wag-label{ font-size:10.5px; opacity:0.8; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:5px; }
 
-  /* ---- aesthetic image ---- */
-  .img-setup{ display:flex; gap:6px; margin-bottom:8px; }
+  /* ---- aesthetic image gallery (multi-image, fills card, no dead gap) ---- */
+  .img-setup{ display:flex; gap:6px; margin-bottom:8px; flex:none; }
   .img-setup input{ flex:1; border:none; border-radius:8px; padding:7px 10px; font-size:12px; background:rgba(107,93,99,0.12); color:var(--ink); outline:none; }
-  .img-setup button{ border:none; background:var(--mauve); color:var(--cream); border-radius:8px; padding:0 12px; font-size:12px; font-weight:600; cursor:pointer; }
-  .aesthetic-img{ width:100%; height:190px; flex:none; border-radius:14px; object-fit:cover; background:rgba(107,93,99,0.12); display:block; }
+  .img-setup button{ border:none; background:var(--mauve); color:var(--cream); border-radius:8px; padding:0 12px; font-size:12px; font-weight:600; cursor:pointer; flex:none; }
+  .aesthetic-wrap{ flex:1; min-height:0; display:flex; }
   .aesthetic-placeholder{
-    flex:none; height:190px; border-radius:14px; display:flex; align-items:center; justify-content:center;
+    flex:1; min-height:100px; border-radius:14px; display:flex; align-items:center; justify-content:center;
     color:var(--ink-soft); font-size:12px; font-style:italic; background:repeating-linear-gradient(135deg, rgba(107,93,99,0.06) 0 10px, rgba(107,93,99,0.1) 10px 20px);
     text-align:center; padding:14px;
   }
+  .aesthetic-gallery{
+    flex:1; width:100%; display:grid; grid-template-columns:repeat(2, 1fr); grid-auto-rows:1fr;
+    gap:8px; overflow-y:auto;
+  }
+  .aesthetic-gallery.single{ grid-template-columns:1fr; }
+  .aesthetic-gallery .gal-item{ position:relative; min-height:90px; }
+  .aesthetic-gallery .gal-item img{ width:100%; height:100%; object-fit:cover; border-radius:12px; display:block; }
+  .aesthetic-gallery .gal-del{
+    position:absolute; top:5px; right:5px; width:18px; height:18px; border-radius:50%;
+    background:rgba(0,0,0,0.45); color:#fff; font-size:10px; display:flex; align-items:center; justify-content:center;
+    opacity:0; transition:opacity .15s ease; cursor:pointer;
+  }
+  .aesthetic-gallery .gal-item:hover .gal-del{ opacity:1; }
 
   /* ---- reading / watching / doing (Spotify-style marquee on overflow) ---- */
   .rw-row{ margin-bottom:12px; }
@@ -392,9 +405,9 @@
       <div class="label-pill" style="background:var(--mauve);">moodboard</div>
       <div class="img-setup">
         <input id="img1-input" type="text" placeholder="paste image URL…">
-        <button id="img1-save">set</button>
+        <button id="img1-save">add</button>
       </div>
-      <div id="img1-wrap"><div class="aesthetic-placeholder">paste an image link above — a still, a cover, a mood, whatever you're into right now</div></div>
+      <div id="img1-wrap" class="aesthetic-wrap"><div class="aesthetic-placeholder">paste image links above — add as many as you like, they'll tile to fill the space</div></div>
     </div>
 
     <div class="card">
@@ -427,15 +440,22 @@
   <!-- COLUMN 3: icon shortcuts grid, fills the full column now -->
   <div class="icons-zone" id="icons-zone"></div>
 
-  <!-- COLUMN 4: gmail + image, with an overflow icon zone if column 3 runs out of room -->
+  <!-- COLUMN 4: gmail + images, with an overflow icon zone if column 3 runs out of room -->
   <div class="gmail-block">
     <a class="gmail-shortcut" href="https://mail.google.com" target="_self">gmail →</a>
-    <div class="card light gmail-img" style="min-height:150px;">
+    <div class="card light gmail-img growcard" style="min-height:150px;">
+      <div class="img-setup">
+        <input id="img3-input" type="text" placeholder="paste image URL…">
+        <button id="img3-save">add</button>
+      </div>
+      <div id="img3-wrap" class="aesthetic-wrap"><div class="aesthetic-placeholder">paste image links above — add as many as you like</div></div>
+    </div>
+    <div class="card light gmail-img growcard" style="min-height:150px;">
       <div class="img-setup">
         <input id="img2-input" type="text" placeholder="paste image URL…">
-        <button id="img2-save">set</button>
+        <button id="img2-save">add</button>
       </div>
-      <div id="img2-wrap"><div class="aesthetic-placeholder">another little image, just for the aesthetic</div></div>
+      <div id="img2-wrap" class="aesthetic-wrap"><div class="aesthetic-placeholder">paste image links above — add as many as you like</div></div>
     </div>
     <div class="icons-zone icons-zone-2" id="icons-zone-2"></div>
   </div>
@@ -710,23 +730,47 @@ async function pollNowPlaying(){
 })();
 setInterval(pollNowPlaying, 15000);
 
-/* ================= IMAGE WIDGETS ================= */
-function wireImage(inputId, saveId, wrapId, storeKey, fallbackHtml){
-  const wrap = document.getElementById(wrapId);
-  function render(){
-    const url = localStorage.getItem(storeKey);
-    wrap.innerHTML = url ? `<img class="aesthetic-img" src="${url}" alt="">` : fallbackHtml;
+/* ================= IMAGE WIDGETS (multi-image gallery) ================= */
+function migrateSingleImage(oldKey, listKey){
+  const old = localStorage.getItem(oldKey);
+  if(old && !localStorage.getItem(listKey)){
+    localStorage.setItem(listKey, JSON.stringify([old]));
+    localStorage.removeItem(oldKey);
   }
-  document.getElementById(saveId).addEventListener('click', ()=>{
-    const v = document.getElementById(inputId).value.trim();
+}
+function wireGallery(inputId, saveId, wrapId, listKey, fallbackHtml){
+  const wrap = document.getElementById(wrapId);
+  function load(){ try{ return JSON.parse(localStorage.getItem(listKey) || '[]'); }catch(e){ return []; } }
+  function save(arr){ localStorage.setItem(listKey, JSON.stringify(arr)); }
+  function render(){
+    const urls = load();
+    if(!urls.length){ wrap.innerHTML = fallbackHtml; return; }
+    wrap.innerHTML = `<div class="aesthetic-gallery ${urls.length===1 ? 'single' : ''}">${urls.map((u,i)=>`
+      <div class="gal-item"><img src="${u}" alt=""><span class="gal-del" data-i="${i}" title="remove">✕</span></div>
+    `).join('')}</div>`;
+    wrap.querySelectorAll('.gal-del').forEach(el=> el.addEventListener('click', ()=>{
+      const arr = load(); arr.splice(+el.dataset.i, 1); save(arr); render();
+    }));
+  }
+  function addImage(){
+    const input = document.getElementById(inputId);
+    const v = input.value.trim();
     if(!v) return;
-    localStorage.setItem(storeKey, v);
+    const arr = load(); arr.push(v); save(arr);
+    input.value = '';
     render();
+  }
+  document.getElementById(saveId).addEventListener('click', addImage);
+  document.getElementById(inputId).addEventListener('keydown', e=>{
+    if(e.key==='Enter'){ e.preventDefault(); addImage(); }
   });
   render();
 }
-wireImage('img1-input','img1-save','img1-wrap','ph_img1', document.getElementById('img1-wrap').innerHTML);
-wireImage('img2-input','img2-save','img2-wrap','ph_img2', document.getElementById('img2-wrap').innerHTML);
+migrateSingleImage('ph_img1', 'ph_img1_list');
+migrateSingleImage('ph_img2', 'ph_img2_list');
+wireGallery('img1-input','img1-save','img1-wrap','ph_img1_list', document.getElementById('img1-wrap').innerHTML);
+wireGallery('img2-input','img2-save','img2-wrap','ph_img2_list', document.getElementById('img2-wrap').innerHTML);
+wireGallery('img3-input','img3-save','img3-wrap','ph_img3_list', document.getElementById('img3-wrap').innerHTML);
 
 /* ================= READING / WATCHING / DOING (Spotify-style marquee on overflow) ================= */
 function rollIn(el){ el.classList.remove('rolling'); void el.offsetWidth; el.classList.add('rolling'); }
