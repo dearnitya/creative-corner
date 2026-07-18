@@ -79,14 +79,13 @@
 
   .growcard{ flex:1; display:flex; flex-direction:column; min-height:220px; }
 
-  .reading-block{ grid-column:3; grid-row:1; }
   .gmail-block{ grid-column:4; grid-row:1/3; display:flex; flex-direction:column; gap:16px; }
-  .icons-zone{ grid-column:3; grid-row:2; }
+  .icons-zone{ grid-column:3; grid-row:1/3; }
   .icons-zone-2{ grid-column:auto; grid-row:auto; flex:1; }
 
   @media (max-width:1100px){
     .board{ grid-template-columns:1fr 1fr; grid-template-rows:auto; }
-    .col1,.col2,.col5,.reading-block,.gmail-block,.icons-zone{ grid-column:auto; grid-row:auto; }
+    .col1,.col2,.col5,.gmail-block,.icons-zone{ grid-column:auto; grid-row:auto; }
   }
 
   /* ---- card / widget shell ---- */
@@ -154,6 +153,17 @@
   .connect-msg button{ margin-top:8px; border:none; background:var(--gold); color:var(--mauve-deep); font-weight:700; padding:7px 14px; border-radius:9px; cursor:pointer; font-size:12px; }
   .agenda-list li.task .dot{ background:var(--mauve-light); }
 
+  /* ---- task checklist + drag reorder ---- */
+  .agenda-list li.task-item{ align-items:center; }
+  .drag-handle{ cursor:grab; opacity:0.5; font-size:11px; flex:none; letter-spacing:-2px; user-select:none; }
+  .drag-handle:active{ cursor:grabbing; }
+  .task-check{ flex:none; width:15px; height:15px; accent-color:var(--gold); cursor:pointer; }
+  .task-text{ flex:1; word-break:break-word; }
+  .task-item.done .task-text{ opacity:0.55; text-decoration:line-through; }
+  .task-del{ opacity:0.5; cursor:pointer; font-size:11px; flex:none; }
+  .task-del:hover{ opacity:1; }
+  .agenda-list li[draggable="true"].dragging{ opacity:0.35; }
+
   /* ---- quick-add task ---- */
   .quick-add-row{ display:flex; gap:6px; margin-bottom:9px; flex:none; }
   .quick-add-row input{
@@ -181,29 +191,44 @@
   .img-setup{ display:flex; gap:6px; margin-bottom:8px; }
   .img-setup input{ flex:1; border:none; border-radius:8px; padding:7px 10px; font-size:12px; background:rgba(107,93,99,0.12); color:var(--ink); outline:none; }
   .img-setup button{ border:none; background:var(--mauve); color:var(--cream); border-radius:8px; padding:0 12px; font-size:12px; font-weight:600; cursor:pointer; }
-  .aesthetic-img{ width:100%; flex:1; min-height:120px; border-radius:14px; object-fit:cover; background:rgba(107,93,99,0.12); display:block; }
+  .aesthetic-img{ width:100%; height:190px; flex:none; border-radius:14px; object-fit:cover; background:rgba(107,93,99,0.12); display:block; }
   .aesthetic-placeholder{
-    flex:1; min-height:120px; border-radius:14px; display:flex; align-items:center; justify-content:center;
+    flex:none; height:190px; border-radius:14px; display:flex; align-items:center; justify-content:center;
     color:var(--ink-soft); font-size:12px; font-style:italic; background:repeating-linear-gradient(135deg, rgba(107,93,99,0.06) 0 10px, rgba(107,93,99,0.1) 10px 20px);
     text-align:center; padding:14px;
   }
 
-  /* ---- reading / watching ---- */
+  /* ---- reading / watching / doing (Spotify-style marquee on overflow) ---- */
   .rw-row{ margin-bottom:12px; }
+  .rw-row:last-child{ margin-bottom:0; }
   .rw-row label{ font-size:11px; text-transform:uppercase; letter-spacing:0.06em; opacity:0.8; display:block; margin-bottom:4px; }
-  .rw-row textarea{
+  .rw-marquee-wrap{ position:relative; border-radius:9px; overflow:hidden; background:rgba(255,247,251,0.22); }
+  .rw-row input.rw-input{
     width:100%; border:none; border-radius:9px; padding:10px 12px; font-family:'Fraunces'; font-style:italic;
-    font-size:16.5px; line-height:1.35; background:rgba(255,247,251,0.22); color:var(--cream); outline:none;
-    resize:none; overflow:hidden; display:block; min-height:44px; transition:height .25s ease;
+    font-size:16.5px; line-height:1.35; background:transparent; color:var(--cream); outline:none;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block; position:relative; z-index:1;
   }
-  .rw-row textarea::placeholder{ color:rgba(255,247,251,0.7); font-family:'DM Sans'; font-style:normal; font-size:13px; }
+  .rw-row input.rw-input::placeholder{ color:rgba(255,247,251,0.7); font-family:'DM Sans'; font-style:normal; font-size:13px; }
+  .rw-row input.rw-input.marquee-active{ color:transparent; }
+  .rw-marquee{
+    position:absolute; inset:0; display:flex; align-items:center; white-space:nowrap; pointer-events:none;
+    padding:0 12px; opacity:0; overflow:hidden; z-index:0;
+  }
+  .rw-marquee span{ font-family:'Fraunces'; font-style:italic; font-size:16.5px; color:var(--cream); flex:none; }
+  .rw-marquee span.dup{ margin-left:44px; }
+  .rw-marquee.show{ opacity:1; }
+  .rw-marquee.show.animate{ animation: rwMarquee var(--marquee-dur,8s) linear infinite; }
+  @keyframes rwMarquee{ from{ transform:translateX(0); } to{ transform:translateX(calc(-1 * var(--marquee-dist,100px))); } }
   @keyframes rwRollIn{ from{ opacity:0; transform:translateX(-8px); } to{ opacity:1; transform:translateX(0); } }
-  .rw-row textarea.rolling{ animation:rwRollIn .4s ease; }
+  .rw-row input.rw-input.rolling{ animation:rwRollIn .4s ease; }
 
   /* ---- icons zone ---- */
-  .icons-zone{ display:flex; flex-wrap:wrap; align-content:flex-start; gap:14px; padding-top:4px; }
+  .icons-zone{
+    display:grid; grid-template-columns:repeat(2, 1fr); grid-auto-rows:min-content;
+    align-content:start; gap:12px; padding-top:4px;
+  }
   .icon-tile{
-    width:84px; background:var(--mauve); border-radius:16px; padding:12px 6px 9px; text-align:center;
+    width:100%; background:var(--mauve); border-radius:16px; padding:10px 4px 8px; text-align:center;
     text-decoration:none; color:var(--cream); box-shadow:var(--shadow); position:relative;
     transition:transform .15s ease, box-shadow .15s ease;
   }
@@ -260,10 +285,12 @@
   #notes-list{ list-style:none; margin:0 0 8px; padding:0; display:flex; flex-direction:column; gap:7px; overflow-y:auto; }
   #notes-list li{
     background:rgba(255,247,251,0.16); border-radius:9px; padding:8px 10px; font-size:12.5px;
-    display:flex; justify-content:space-between; gap:8px; align-items:flex-start;
+    display:flex; justify-content:space-between; gap:8px; align-items:center;
   }
+  #notes-list li .note-text{ flex:1; word-break:break-word; }
   #notes-list li .rm{ opacity:0.6; cursor:pointer; font-size:11px; flex:none; }
   #notes-list li .rm:hover{ opacity:1; }
+  #notes-list li.dragging{ opacity:0.35; }
   #notes-form{ display:flex; gap:6px; margin-top:auto; }
   #notes-input{
     flex:1; border:none; border-radius:9px; padding:8px 10px; font-size:12.5px; font-family:'DM Sans';
@@ -370,35 +397,34 @@
       <div id="img1-wrap"><div class="aesthetic-placeholder">paste an image link above — a still, a cover, a mood, whatever you're into right now</div></div>
     </div>
 
-    <div class="card light">
-      <form id="search2" action="https://www.google.com/search" method="get" style="display:flex; gap:8px; align-items:center;">
-        <span style="opacity:0.6;">⌕</span>
-        <input type="text" name="q" placeholder="search the web…" style="flex:1; border:none; outline:none; background:transparent; font-family:'DM Sans'; font-size:13.5px; color:var(--ink);" autocomplete="off">
-      </form>
-    </div>
-
-    <div class="card growcard" id="calendar-card">
+    <div class="card">
       <div class="sprockets"><span></span><span></span><span></span><span></span><span></span><span></span></div>
-      <div class="label-pill">calendar & deadlines</div>
-      <div id="cal-body" style="flex:1; display:flex; flex-direction:column; gap:8px;">
-        <div class="connect-msg">Connect your Google account to see a mini week view of your events and task deadlines here.</div>
+      <div class="label-pill">currently</div>
+      <div class="rw-row">
+        <label>reading</label>
+        <div class="rw-marquee-wrap">
+          <input id="reading-input" class="rw-input" type="text" placeholder="book title…" autocomplete="off">
+          <div class="rw-marquee" id="reading-marquee"><span></span><span class="dup"></span></div>
+        </div>
+      </div>
+      <div class="rw-row">
+        <label>watching</label>
+        <div class="rw-marquee-wrap">
+          <input id="watching-input" class="rw-input" type="text" placeholder="show / film…" autocomplete="off">
+          <div class="rw-marquee" id="watching-marquee"><span></span><span class="dup"></span></div>
+        </div>
+      </div>
+      <div class="rw-row">
+        <label>doing</label>
+        <div class="rw-marquee-wrap">
+          <input id="doing-input" class="rw-input" type="text" placeholder="what you're up to…" autocomplete="off">
+          <div class="rw-marquee" id="doing-marquee"><span></span><span class="dup"></span></div>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- COLUMN 3: currently reading/watching on top, icon grid fills the rest -->
-  <div class="card reading-block">
-    <div class="sprockets"><span></span><span></span><span></span><span></span><span></span><span></span></div>
-    <div class="label-pill">currently</div>
-    <div class="rw-row">
-      <label>reading</label>
-      <textarea id="reading-input" rows="1" placeholder="book title…"></textarea>
-    </div>
-    <div class="rw-row" style="margin-bottom:0;">
-      <label>watching</label>
-      <textarea id="watching-input" rows="1" placeholder="show / film…"></textarea>
-    </div>
-  </div>
+  <!-- COLUMN 3: icon shortcuts grid, fills the full column now -->
   <div class="icons-zone" id="icons-zone"></div>
 
   <!-- COLUMN 4: gmail + image, with an overflow icon zone if column 3 runs out of room -->
@@ -702,21 +728,54 @@ function wireImage(inputId, saveId, wrapId, storeKey, fallbackHtml){
 wireImage('img1-input','img1-save','img1-wrap','ph_img1', document.getElementById('img1-wrap').innerHTML);
 wireImage('img2-input','img2-save','img2-wrap','ph_img2', document.getElementById('img2-wrap').innerHTML);
 
-/* ================= READING / WATCHING ================= */
-function autoResizeTA(el){ el.style.height='auto'; el.style.height = el.scrollHeight + 'px'; }
+/* ================= READING / WATCHING / DOING (Spotify-style marquee on overflow) ================= */
 function rollIn(el){ el.classList.remove('rolling'); void el.offsetWidth; el.classList.add('rolling'); }
-['reading','watching'].forEach(key=>{
+
+function refreshMarquee(key){
+  const input = document.getElementById(key+'-input');
+  const marquee = document.getElementById(key+'-marquee');
+  if(!input || !marquee) return;
+  const main = marquee.children[0], dup = marquee.children[1];
+  const text = input.value.trim();
+  main.textContent = text;
+  dup.textContent = text;
+
+  if(document.activeElement === input || !text){
+    marquee.classList.remove('show','animate');
+    input.classList.remove('marquee-active');
+    return;
+  }
+  requestAnimationFrame(()=>{
+    const wrapWidth = input.clientWidth - 24; // account for padding
+    const textWidth = main.scrollWidth;
+    if(textWidth > wrapWidth){
+      const dist = textWidth + 44; // text width + gap before the duplicate
+      marquee.style.setProperty('--marquee-dist', dist + 'px');
+      marquee.style.setProperty('--marquee-dur', Math.max(4, dist / 45) + 's');
+      marquee.classList.add('show','animate');
+      input.classList.add('marquee-active');
+    } else {
+      marquee.classList.remove('show','animate');
+      input.classList.remove('marquee-active');
+    }
+  });
+}
+
+['reading','watching','doing'].forEach(key=>{
   const el = document.getElementById(key+'-input');
   el.value = localStorage.getItem('ph_'+key) || '';
-  autoResizeTA(el);
-  el.addEventListener('input', ()=>{ localStorage.setItem('ph_'+key, el.value); autoResizeTA(el); rollIn(el); });
-});
-window.addEventListener('load', ()=>{
-  ['reading','watching'].forEach(key=>{
-    const el = document.getElementById(key+'-input');
-    autoResizeTA(el);
-    if(el.value.trim()) rollIn(el);
+  el.addEventListener('input', ()=>{
+    localStorage.setItem('ph_'+key, el.value);
+    rollIn(el);
+    refreshMarquee(key);
   });
+  el.addEventListener('focus', ()=> refreshMarquee(key));
+  el.addEventListener('blur', ()=> refreshMarquee(key));
+});
+window.addEventListener('load', ()=> ['reading','watching','doing'].forEach(refreshMarquee));
+window.addEventListener('resize', ()=>{
+  clearTimeout(window._mqRt);
+  window._mqRt = setTimeout(()=> ['reading','watching','doing'].forEach(refreshMarquee), 200);
 });
 
 /* ================= ICON SHORTCUTS ================= */
@@ -788,16 +847,58 @@ document.addEventListener('click', e=>{
   if(!e.target.closest('.waffle-wrap')) wafflePanel.classList.remove('open');
 });
 
+/* ================= DRAG-AND-DROP REORDER (shared by notes + tasks) ================= */
+function getDragAfterElement(container, y){
+  const els = [...container.querySelectorAll('[draggable="true"]:not(.dragging)')];
+  return els.reduce((closest, child)=>{
+    const box = child.getBoundingClientRect();
+    const offset = y - box.top - box.height/2;
+    if(offset < 0 && offset > closest.offset) return { offset, element: child };
+    return closest;
+  }, { offset: -Infinity }).element;
+}
+function wireDragReorder(listEl, onDrop){
+  let dragEl = null;
+  listEl.querySelectorAll('[draggable="true"]').forEach(item=>{
+    item.addEventListener('dragstart', ()=>{ dragEl = item; setTimeout(()=> item.classList.add('dragging'), 0); });
+    item.addEventListener('dragend', ()=>{
+      item.classList.remove('dragging');
+      dragEl = null;
+      if(onDrop) onDrop(listEl);
+    });
+  });
+  if(listEl._dragOverHandler) listEl.removeEventListener('dragover', listEl._dragOverHandler);
+  listEl._dragOverHandler = e=>{
+    e.preventDefault();
+    if(!dragEl) return;
+    const after = getDragAfterElement(listEl, e.clientY);
+    if(after==null) listEl.appendChild(dragEl);
+    else listEl.insertBefore(dragEl, after);
+  };
+  listEl.addEventListener('dragover', listEl._dragOverHandler);
+}
+
 /* ================= NOTES ================= */
 function loadNotes(){ return JSON.parse(localStorage.getItem('ph_notes')||'[]'); }
 function saveNotes(n){ localStorage.setItem('ph_notes', JSON.stringify(n)); }
 function renderNotes(){
   const list = loadNotes();
   const ul = document.getElementById('notes-list');
-  ul.innerHTML = list.map((n,i)=>`<li><span>${n}</span><span class="rm" data-i="${i}">✕</span></li>`).join('') || `<li style="opacity:0.7;">no notes yet</li>`;
+  ul.innerHTML = list.map((n,i)=>`<li draggable="true" data-i="${i}"><span class="drag-handle">⋮⋮</span><span class="note-text">${n}</span><span class="rm" data-i="${i}">✕</span></li>`).join('') || `<li style="opacity:0.7;">no notes yet</li>`;
   ul.querySelectorAll('.rm').forEach(el=> el.addEventListener('click', ()=>{
     const n = loadNotes(); n.splice(+el.dataset.i,1); saveNotes(n); renderNotes();
   }));
+  if(list.length > 1) wireDragReorder(ul, reorderNotesAfterDrop);
+}
+function reorderNotesAfterDrop(ul){
+  const texts = [...ul.querySelectorAll('.note-text')].map(s=> s.textContent);
+  saveNotes(texts);
+  // keep DOM order as-is, just refresh the data-i indices so delete buttons stay accurate
+  [...ul.children].forEach((li,i)=>{
+    li.dataset.i = i;
+    const rm = li.querySelector('.rm');
+    if(rm) rm.dataset.i = i;
+  });
 }
 document.getElementById('notes-form').addEventListener('submit', e=>{
   e.preventDefault();
@@ -839,7 +940,6 @@ function initGoogle(){
         saveGoogleToken(resp);
         markGoogleConnected();
         loadTasks();
-        loadCalendarAndDeadlines();
       }
     }
   });
@@ -850,7 +950,6 @@ function initGoogle(){
     googleAccessToken = saved;
     markGoogleConnected();
     loadTasks();
-    loadCalendarAndDeadlines();
     return;
   }
 
@@ -907,8 +1006,75 @@ async function refreshTaskList(){
     const d = await r.json();
     const items = d.items || [];
     if(!items.length){ listWrap.innerHTML = `<div class="agenda-empty">no tasks — nice and clear ✦</div>`; return; }
-    listWrap.innerHTML = `<ul class="agenda-list">${items.map(t=>`<li class="${t.status==='completed'?'done':''}"><span class="dot"></span><span>${t.title||'(untitled)'}</span></li>`).join('')}</ul>`;
+    listWrap.innerHTML = `<ul class="agenda-list" id="task-list">${items.map(t=>`
+      <li class="task-item ${t.status==='completed'?'done':''}" draggable="true" data-id="${t.id}">
+        <span class="drag-handle">⋮⋮</span>
+        <input type="checkbox" class="task-check" ${t.status==='completed'?'checked':''}>
+        <span class="task-text">${t.title||'(untitled)'}</span>
+        <span class="task-del" title="delete">✕</span>
+      </li>`).join('')}</ul>`;
+    wireTaskInteractions();
   }catch(e){ listWrap.innerHTML = `<div class="agenda-empty">couldn't load tasks — try reconnecting from ⚙ settings.</div>`; }
+}
+
+function wireTaskInteractions(){
+  const list = document.getElementById('task-list');
+  if(!list) return;
+
+  list.querySelectorAll('.task-check').forEach(cb=>{
+    cb.addEventListener('change', async e=>{
+      const li = e.target.closest('li');
+      const id = li.dataset.id;
+      const done = e.target.checked;
+      li.classList.toggle('done', done);
+      try{
+        const r = await fetch(`https://tasks.googleapis.com/tasks/v1/lists/@default/tasks/${id}`, {
+          method:'PATCH',
+          headers:{ Authorization:'Bearer '+googleAccessToken, 'Content-Type':'application/json' },
+          body: JSON.stringify({ status: done ? 'completed' : 'needsAction' })
+        });
+        if(!r.ok) throw new Error('patch failed');
+      }catch(err){
+        e.target.checked = !done;
+        li.classList.toggle('done', !done);
+      }
+    });
+  });
+
+  list.querySelectorAll('.task-del').forEach(x=>{
+    x.addEventListener('click', async e=>{
+      const li = e.target.closest('li');
+      const id = li.dataset.id;
+      li.style.opacity = '0.4';
+      try{
+        const r = await fetch(`https://tasks.googleapis.com/tasks/v1/lists/@default/tasks/${id}`, {
+          method:'DELETE', headers:{ Authorization:'Bearer '+googleAccessToken }
+        });
+        if(!r.ok) throw new Error('delete failed');
+        li.remove();
+        if(!list.children.length){
+          document.getElementById('todo-list-wrap').innerHTML = `<div class="agenda-empty">no tasks — nice and clear ✦</div>`;
+        }
+      }catch(err){
+        li.style.opacity = '1';
+        alert("Couldn't delete that task — try again.");
+      }
+    });
+  });
+
+  if(list.children.length > 1) wireDragReorder(list, reorderTasksAfterDrop);
+}
+
+async function reorderTasksAfterDrop(list){
+  const ids = [...list.children].map(li=> li.dataset.id);
+  let prev = null;
+  for(const id of ids){
+    try{
+      const url = `https://tasks.googleapis.com/tasks/v1/lists/@default/tasks/${id}/move` + (prev ? `?previous=${prev}` : '');
+      await fetch(url, { method:'POST', headers:{ Authorization:'Bearer '+googleAccessToken } });
+    }catch(e){ /* best effort — order will resync next reload */ }
+    prev = id;
+  }
 }
 
 async function addTask(){
@@ -933,82 +1099,6 @@ async function addTask(){
   }
 }
 
-async function loadCalendarAndDeadlines(){
-  const body = document.getElementById('cal-body');
-  body.innerHTML = `<div class="week-strip" id="week-strip"></div><div id="week-agenda" style="flex:1; overflow-y:auto;"><div class="agenda-empty">loading…</div></div>`;
-  const stripEl = document.getElementById('week-strip');
-  const agendaEl = document.getElementById('week-agenda');
-
-  const today = new Date(); today.setHours(0,0,0,0);
-  const weekEnd = new Date(today); weekEnd.setDate(weekEnd.getDate()+7);
-  const dayKey = dt => dt.toDateString();
-
-  let events = [];
-  try{
-    const r = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${today.toISOString()}&timeMax=${weekEnd.toISOString()}&maxResults=50&singleEvents=true&orderBy=startTime`, {
-      headers:{ Authorization: 'Bearer ' + googleAccessToken }
-    });
-    const d = await r.json();
-    events = d.items || [];
-  }catch(e){}
-
-  let deadlineTasks = [];
-  try{
-    const r2 = await fetch('https://tasks.googleapis.com/tasks/v1/lists/@default/tasks?showCompleted=false&maxResults=50', {
-      headers:{ Authorization: 'Bearer ' + googleAccessToken }
-    });
-    const d2 = await r2.json();
-    deadlineTasks = (d2.items || []).filter(t=>t.due);
-  }catch(e){}
-
-  const dayMap = {};
-  function addItem(dt, item){ const k = dayKey(dt); (dayMap[k] = dayMap[k]||[]).push(item); }
-
-  events.forEach(ev=>{
-    const start = ev.start.dateTime || ev.start.date;
-    const dt = new Date(start);
-    if(dt < today || dt >= weekEnd) return;
-    const time = ev.start.dateTime ? dt.toLocaleTimeString(undefined,{hour:'numeric', minute:'2-digit'}) : null;
-    addItem(dt, { type:'event', time, text: ev.summary || '(no title)' });
-  });
-  deadlineTasks.forEach(t=>{
-    const dt = new Date(t.due);
-    if(dt < today || dt >= weekEnd) return;
-    addItem(dt, { type:'task', time:null, text: t.title || '(untitled)' });
-  });
-
-  let stripHtml = '';
-  for(let i=0;i<7;i++){
-    const d = new Date(today); d.setDate(d.getDate()+i);
-    const has = !!dayMap[dayKey(d)];
-    stripHtml += `<div class="week-day ${i===0?'today':''}">
-      <div class="wd-name">${d.toLocaleDateString(undefined,{weekday:'narrow'})}</div>
-      <div class="wd-num">${d.getDate()}</div>
-      <div class="wd-dot ${has?'':'hidden'}"></div>
-    </div>`;
-  }
-  stripEl.innerHTML = stripHtml;
-
-  const keys = Object.keys(dayMap).sort((a,b)=> new Date(a) - new Date(b));
-  if(!keys.length){ agendaEl.innerHTML = `<div class="agenda-empty">nothing coming up this week ✦</div>`; return; }
-
-  const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate()+1);
-  agendaEl.innerHTML = keys.map(k=>{
-    const dt = new Date(k);
-    const label = dayKey(dt)===dayKey(today) ? 'today'
-      : dayKey(dt)===dayKey(tomorrow) ? 'tomorrow'
-      : dt.toLocaleDateString(undefined,{weekday:'long', month:'short', day:'numeric'});
-    const items = dayMap[k];
-    return `<div class="week-agenda-group">
-      <div class="wag-label">${label}</div>
-      <ul class="agenda-list">${items.map(it=>{
-        const marker = it.type==='task' ? '📌 ' : '';
-        const timePart = it.time ? `<b>${it.time}</b><br>` : '';
-        return `<li class="${it.type==='task'?'task':''}"><span class="dot"></span><span>${timePart}${marker}${it.text}</span></li>`;
-      }).join('')}</ul>
-    </div>`;
-  }).join('');
-}
 </script>
 </body>
 </html>
