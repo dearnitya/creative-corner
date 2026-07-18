@@ -67,7 +67,7 @@
   .board{
     max-width:1400px; margin:0 auto;
     display:grid;
-    grid-template-columns: 1fr 1.05fr 1.35fr 1.05fr 0.85fr;
+    grid-template-columns: 1fr 1.05fr 1.1fr 1.3fr 0.85fr;
     grid-template-rows: auto 1fr;
     gap:16px;
     align-items:stretch;
@@ -79,13 +79,12 @@
 
   .growcard{ flex:1; display:flex; flex-direction:column; min-height:220px; }
 
-  .reading-block{ grid-column:3; grid-row:1; }
-  .gmail-block{ grid-column:4; grid-row:1; display:flex; flex-direction:column; gap:10px; }
-  .icons-zone{ grid-column:3/5; grid-row:2; }
+  .gmail-block{ grid-column:4; grid-row:1/3; display:flex; flex-direction:column; gap:16px; }
+  .icons-zone{ grid-column:3; grid-row:1/3; align-content:flex-start; }
 
   @media (max-width:1100px){
     .board{ grid-template-columns:1fr 1fr; grid-template-rows:auto; }
-    .col1,.col2,.col5,.reading-block,.gmail-block,.icons-zone{ grid-column:auto; grid-row:auto; }
+    .col1,.col2,.col5,.gmail-block,.icons-zone{ grid-column:auto; grid-row:auto; }
   }
 
   /* ---- card / widget shell ---- */
@@ -177,14 +176,14 @@
   }
 
   /* ---- reading / watching ---- */
-  .rw-row{ margin-bottom:10px; }
-  .rw-row label{ font-size:10.5px; text-transform:uppercase; letter-spacing:0.06em; opacity:0.8; display:block; margin-bottom:3px; }
+  .rw-row{ margin-bottom:12px; }
+  .rw-row label{ font-size:11px; text-transform:uppercase; letter-spacing:0.06em; opacity:0.8; display:block; margin-bottom:4px; }
   .rw-row textarea{
-    width:100%; border:none; border-radius:9px; padding:8px 10px; font-family:'Fraunces'; font-style:italic;
-    font-size:14.5px; line-height:1.35; background:rgba(255,247,251,0.22); color:var(--cream); outline:none;
-    resize:none; overflow:hidden; display:block; min-height:36px;
+    width:100%; border:none; border-radius:9px; padding:10px 12px; font-family:'Fraunces'; font-style:italic;
+    font-size:16.5px; line-height:1.35; background:rgba(255,247,251,0.22); color:var(--cream); outline:none;
+    resize:none; overflow:hidden; display:block; min-height:44px;
   }
-  .rw-row textarea::placeholder{ color:rgba(255,247,251,0.7); font-family:'DM Sans'; font-style:normal; font-size:12.5px; }
+  .rw-row textarea::placeholder{ color:rgba(255,247,251,0.7); font-family:'DM Sans'; font-style:normal; font-size:13px; }
 
   /* ---- icons zone ---- */
   .icons-zone{ display:flex; flex-wrap:wrap; align-content:flex-start; gap:14px; padding-top:4px; }
@@ -351,21 +350,10 @@
     </div>
   </div>
 
-  <!-- COLUMN 3: reading/watching -->
-  <div class="card reading-block">
-    <div class="sprockets"><span></span><span></span><span></span><span></span><span></span><span></span></div>
-    <div class="label-pill">currently</div>
-    <div class="rw-row">
-      <label>reading</label>
-      <textarea id="reading-input" rows="1" placeholder="book title…"></textarea>
-    </div>
-    <div class="rw-row" style="margin-bottom:0;">
-      <label>watching</label>
-      <textarea id="watching-input" rows="1" placeholder="show / film…"></textarea>
-    </div>
-  </div>
+  <!-- COLUMN 3: icon shortcuts fill the vacated middle space -->
+  <div class="icons-zone" id="icons-zone"></div>
 
-  <!-- COLUMN 4: gmail -->
+  <!-- COLUMN 4: gmail, image, currently reading/watching, another image -->
   <div class="gmail-block">
     <a class="gmail-shortcut" href="https://mail.google.com" target="_self">gmail →</a>
     <div class="card light gmail-img" style="min-height:150px;">
@@ -375,10 +363,28 @@
       </div>
       <div id="img2-wrap"><div class="aesthetic-placeholder">another little image, just for the aesthetic</div></div>
     </div>
-  </div>
 
-  <!-- ICONS ZONE (spans col 3+4) -->
-  <div class="icons-zone" id="icons-zone"></div>
+    <div class="card reading-block">
+      <div class="sprockets"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+      <div class="label-pill">currently</div>
+      <div class="rw-row">
+        <label>reading</label>
+        <textarea id="reading-input" rows="1" placeholder="book title…"></textarea>
+      </div>
+      <div class="rw-row" style="margin-bottom:0;">
+        <label>watching</label>
+        <textarea id="watching-input" rows="1" placeholder="show / film…"></textarea>
+      </div>
+    </div>
+
+    <div class="card light gmail-img" style="min-height:150px;">
+      <div class="img-setup">
+        <input id="img3-input" type="text" placeholder="paste image URL…">
+        <button id="img3-save">set</button>
+      </div>
+      <div id="img3-wrap"><div class="aesthetic-placeholder">one more, if you've got the space for it</div></div>
+    </div>
+  </div>
 
   <!-- COLUMN 5 -->
   <div class="colstack col5">
@@ -516,6 +522,7 @@ function wireImage(inputId, saveId, wrapId, storeKey, fallbackHtml){
 }
 wireImage('img1-input','img1-save','img1-wrap','ph_img1', document.getElementById('img1-wrap').innerHTML);
 wireImage('img2-input','img2-save','img2-wrap','ph_img2', document.getElementById('img2-wrap').innerHTML);
+wireImage('img3-input','img3-save','img3-wrap','ph_img3', document.getElementById('img3-wrap').innerHTML);
 
 /* ================= READING / WATCHING ================= */
 function autoResizeTA(el){ el.style.height='auto'; el.style.height = el.scrollHeight + 'px'; }
@@ -605,6 +612,22 @@ renderNotes();
 let googleAccessToken = null;
 let tokenClient = null;
 
+function saveGoogleToken(resp){
+  const expiresAt = Date.now() + (resp.expires_in*1000) - 60000; // refresh 1 min early
+  localStorage.setItem('ph_token', resp.access_token);
+  localStorage.setItem('ph_token_expiry', String(expiresAt));
+  localStorage.setItem('ph_google_ever_connected', '1');
+}
+function getSavedGoogleToken(){
+  const t = localStorage.getItem('ph_token');
+  const exp = Number(localStorage.getItem('ph_token_expiry') || 0);
+  return (t && exp > Date.now()) ? t : null;
+}
+function markGoogleConnected(){
+  document.getElementById('google-connect-status').textContent = 'connected';
+  document.getElementById('google-connect-status').className = 'status ok';
+}
+
 function initGoogle(){
   const clientId = localStorage.getItem('ph_client_id');
   if(!clientId || !window.google || !google.accounts) return;
@@ -614,15 +637,41 @@ function initGoogle(){
     callback: (resp)=>{
       if(resp.access_token){
         googleAccessToken = resp.access_token;
-        document.getElementById('google-connect-status').textContent = 'connected';
-        document.getElementById('google-connect-status').className = 'status ok';
+        saveGoogleToken(resp);
+        markGoogleConnected();
         loadTasks();
         loadCalendarAndDeadlines();
       }
     }
   });
+
+  // Reuse a still-valid token from an earlier visit — no reconnect needed.
+  const saved = getSavedGoogleToken();
+  if(saved){
+    googleAccessToken = saved;
+    markGoogleConnected();
+    loadTasks();
+    loadCalendarAndDeadlines();
+    return;
+  }
+
+  // Token expired but we've connected before — try a silent (no popup) refresh.
+  // This works as long as the person is still signed into that Google account
+  // in this browser and hasn't revoked access.
+  if(localStorage.getItem('ph_google_ever_connected') === '1'){
+    tokenClient.requestAccessToken({ prompt: '' });
+  }
 }
 window.addEventListener('load', ()=> setTimeout(initGoogle, 400));
+
+// While the tab stays open, quietly refresh the token a few minutes before it expires.
+setInterval(()=>{
+  if(!tokenClient || !googleAccessToken) return;
+  const exp = Number(localStorage.getItem('ph_token_expiry') || 0);
+  if(exp - Date.now() < 5*60*1000){
+    tokenClient.requestAccessToken({ prompt: '' });
+  }
+}, 4*60*1000);
 
 document.getElementById('google-connect-btn').addEventListener('click', ()=>{
   if(!localStorage.getItem('ph_client_id')){
