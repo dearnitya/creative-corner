@@ -67,7 +67,7 @@
   .board{
     max-width:1400px; margin:0 auto;
     display:grid;
-    grid-template-columns: 1fr 1.05fr 1.1fr 1.3fr 0.85fr;
+    grid-template-columns: 0.85fr 0.95fr 1.3fr 1.1fr 0.75fr;
     grid-template-rows: auto 1fr;
     gap:16px;
     align-items:stretch;
@@ -79,12 +79,14 @@
 
   .growcard{ flex:1; display:flex; flex-direction:column; min-height:220px; }
 
+  .reading-block{ grid-column:3; grid-row:1; }
   .gmail-block{ grid-column:4; grid-row:1/3; display:flex; flex-direction:column; gap:16px; }
-  .icons-zone{ grid-column:3; grid-row:1/3; align-content:flex-start; }
+  .icons-zone{ grid-column:3; grid-row:2; }
+  .icons-zone-2{ grid-column:auto; grid-row:auto; flex:1; }
 
   @media (max-width:1100px){
     .board{ grid-template-columns:1fr 1fr; grid-template-rows:auto; }
-    .col1,.col2,.col5,.gmail-block,.icons-zone{ grid-column:auto; grid-row:auto; }
+    .col1,.col2,.col5,.reading-block,.gmail-block,.icons-zone{ grid-column:auto; grid-row:auto; }
   }
 
   /* ---- card / widget shell ---- */
@@ -350,10 +352,22 @@
     </div>
   </div>
 
-  <!-- COLUMN 3: icon shortcuts fill the vacated middle space -->
+  <!-- COLUMN 3: currently reading/watching on top, icon grid fills the rest -->
+  <div class="card reading-block">
+    <div class="sprockets"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+    <div class="label-pill">currently</div>
+    <div class="rw-row">
+      <label>reading</label>
+      <textarea id="reading-input" rows="1" placeholder="book title…"></textarea>
+    </div>
+    <div class="rw-row" style="margin-bottom:0;">
+      <label>watching</label>
+      <textarea id="watching-input" rows="1" placeholder="show / film…"></textarea>
+    </div>
+  </div>
   <div class="icons-zone" id="icons-zone"></div>
 
-  <!-- COLUMN 4: gmail, image, currently reading/watching, another image -->
+  <!-- COLUMN 4: gmail + image, with an overflow icon zone if column 3 runs out of room -->
   <div class="gmail-block">
     <a class="gmail-shortcut" href="https://mail.google.com" target="_self">gmail →</a>
     <div class="card light gmail-img" style="min-height:150px;">
@@ -363,27 +377,7 @@
       </div>
       <div id="img2-wrap"><div class="aesthetic-placeholder">another little image, just for the aesthetic</div></div>
     </div>
-
-    <div class="card reading-block">
-      <div class="sprockets"><span></span><span></span><span></span><span></span><span></span><span></span></div>
-      <div class="label-pill">currently</div>
-      <div class="rw-row">
-        <label>reading</label>
-        <textarea id="reading-input" rows="1" placeholder="book title…"></textarea>
-      </div>
-      <div class="rw-row" style="margin-bottom:0;">
-        <label>watching</label>
-        <textarea id="watching-input" rows="1" placeholder="show / film…"></textarea>
-      </div>
-    </div>
-
-    <div class="card light gmail-img" style="min-height:150px;">
-      <div class="img-setup">
-        <input id="img3-input" type="text" placeholder="paste image URL…">
-        <button id="img3-save">set</button>
-      </div>
-      <div id="img3-wrap"><div class="aesthetic-placeholder">one more, if you've got the space for it</div></div>
-    </div>
+    <div class="icons-zone icons-zone-2" id="icons-zone-2"></div>
   </div>
 
   <!-- COLUMN 5 -->
@@ -522,7 +516,6 @@ function wireImage(inputId, saveId, wrapId, storeKey, fallbackHtml){
 }
 wireImage('img1-input','img1-save','img1-wrap','ph_img1', document.getElementById('img1-wrap').innerHTML);
 wireImage('img2-input','img2-save','img2-wrap','ph_img2', document.getElementById('img2-wrap').innerHTML);
-wireImage('img3-input','img3-save','img3-wrap','ph_img3', document.getElementById('img3-wrap').innerHTML);
 
 /* ================= READING / WATCHING ================= */
 function autoResizeTA(el){ el.style.height='auto'; el.style.height = el.scrollHeight + 'px'; }
@@ -540,15 +533,17 @@ window.addEventListener('load', ()=>{
 function loadShortcuts(){ return JSON.parse(localStorage.getItem('ph_shortcuts')||'[]'); }
 function saveShortcuts(l){ localStorage.setItem('ph_shortcuts', JSON.stringify(l)); }
 function faviconFor(url){ try{ return `https://www.google.com/s2/favicons?domain=${new URL(url).hostname}&sz=64`; }catch(e){ return ''; } }
-function renderShortcuts(){
-  const zone = document.getElementById('icons-zone');
-  zone.innerHTML='';
-  loadShortcuts().forEach((s,i)=>{
-    const a = document.createElement('a');
-    a.href=s.url; a.target='_self'; a.className='icon-tile';
-    a.innerHTML = `<span class="del" data-i="${i}">✕</span><img src="${faviconFor(s.url)}"><div class="nm">${s.name}</div>`;
-    zone.appendChild(a);
+function makeShortcutTile(s,i){
+  const a = document.createElement('a');
+  a.href=s.url; a.target='_self'; a.className='icon-tile';
+  a.innerHTML = `<span class="del" data-i="${i}">✕</span><img src="${faviconFor(s.url)}"><div class="nm">${s.name}</div>`;
+  a.querySelector('.del').addEventListener('click', e=>{
+    e.preventDefault(); e.stopPropagation();
+    const list = loadShortcuts(); list.splice(i,1); saveShortcuts(list); renderShortcuts();
   });
+  return a;
+}
+function makeAddTile(){
   const add = document.createElement('div');
   add.className='icon-tile add';
   add.innerHTML = `<div class="plus">+</div><div class="nm">add</div>`;
@@ -560,15 +555,29 @@ function renderShortcuts(){
     if(!/^https?:\/\//i.test(url)) url = 'https://'+url;
     const list = loadShortcuts(); list.push({name,url}); saveShortcuts(list); renderShortcuts();
   });
-  zone.appendChild(add);
-  zone.querySelectorAll('.del').forEach(btn=>{
-    btn.addEventListener('click', e=>{
-      e.preventDefault(); e.stopPropagation();
-      const list = loadShortcuts(); list.splice(+btn.dataset.i,1); saveShortcuts(list); renderShortcuts();
-    });
+  return add;
+}
+function renderShortcuts(){
+  const zone1 = document.getElementById('icons-zone');
+  const zone2 = document.getElementById('icons-zone-2');
+  zone1.innerHTML=''; zone2.innerHTML='';
+
+  const tiles = loadShortcuts().map(makeShortcutTile);
+  tiles.push(makeAddTile());
+  tiles.forEach(t=> zone1.appendChild(t));
+
+  // If the primary icon column runs out of room, spill the trailing tiles
+  // into the overflow zone under the gmail image, in order.
+  requestAnimationFrame(()=>{
+    let guard = 0;
+    while(zone1.scrollHeight > zone1.clientHeight + 2 && zone1.children.length > 1 && guard < 100){
+      zone2.insertBefore(zone1.lastElementChild, zone2.firstChild);
+      guard++;
+    }
   });
 }
 renderShortcuts();
+window.addEventListener('resize', ()=>{ clearTimeout(window._icRt); window._icRt = setTimeout(renderShortcuts, 200); });
 
 /* ================= GOOGLE APPS WAFFLE ================= */
 const googleApps = [
