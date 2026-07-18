@@ -191,15 +191,18 @@
   .img-setup{ display:flex; gap:6px; margin-bottom:8px; flex:none; }
   .img-setup input{ flex:1; border:none; border-radius:8px; padding:7px 10px; font-size:12px; background:rgba(107,93,99,0.12); color:var(--ink); outline:none; }
   .img-setup button{ border:none; background:var(--mauve); color:var(--cream); border-radius:8px; padding:0 12px; font-size:12px; font-weight:600; cursor:pointer; flex:none; }
-  .aesthetic-wrap{ flex:none; width:100%; }
+  .aesthetic-wrap{ flex:none; width:100%; display:flex; justify-content:center; }
   .aesthetic-placeholder{
     width:100%; aspect-ratio:1/1; border-radius:14px; display:flex; align-items:center; justify-content:center;
     color:var(--ink-soft); font-size:12px; font-style:italic; background:repeating-linear-gradient(135deg, rgba(107,93,99,0.06) 0 10px, rgba(107,93,99,0.1) 10px 20px);
-    text-align:center; padding:14px;
+    text-align:center; padding:14px; box-sizing:border-box;
   }
   .aesthetic-gallery{
     width:100%; display:grid; grid-template-columns:repeat(2, 1fr); gap:8px; max-height:420px; overflow-y:auto;
   }
+  /* smaller squares for the compact gmail-column widgets so they don't dwarf their card */
+  .aesthetic-wrap.compact .aesthetic-placeholder,
+  .aesthetic-wrap.compact .aesthetic-gallery{ max-width:180px; }
   .aesthetic-gallery.single{ grid-template-columns:1fr; }
   .aesthetic-gallery .gal-item{ position:relative; width:100%; aspect-ratio:1/1; }
   .aesthetic-gallery .gal-item img{ width:100%; height:100%; object-fit:cover; border-radius:12px; display:block; }
@@ -447,14 +450,14 @@
         <input id="img3-input" type="text" placeholder="paste image URL…">
         <button id="img3-save">add</button>
       </div>
-      <div id="img3-wrap" class="aesthetic-wrap"><div class="aesthetic-placeholder">paste image links above — add as many as you like</div></div>
+      <div id="img3-wrap" class="aesthetic-wrap compact"><div class="aesthetic-placeholder">paste image links above — add as many as you like</div></div>
     </div>
     <div class="card light gmail-img growcard" style="min-height:150px;">
       <div class="img-setup">
         <input id="img2-input" type="text" placeholder="paste image URL…">
         <button id="img2-save">add</button>
       </div>
-      <div id="img2-wrap" class="aesthetic-wrap"><div class="aesthetic-placeholder">paste image links above — add as many as you like</div></div>
+      <div id="img2-wrap" class="aesthetic-wrap compact"><div class="aesthetic-placeholder">paste image links above — add as many as you like</div></div>
     </div>
     <div class="icons-zone icons-zone-2" id="icons-zone-2"></div>
   </div>
